@@ -10,4 +10,13 @@ public struct EntityState {
 		this.rotation = rotation;
 	}
 	
+    public static bool operator == (EntityState a, EntityState b)
+    {
+        return a.position == b.position && a.rotation == b.rotation;
+    }
+
+    public static bool operator != (EntityState a, EntityState b)
+    {
+        return !(a.position == b.position && a.rotation == b.rotation);
+    }
 }

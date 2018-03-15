@@ -1,15 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MovableEntity : MonoBehaviour {
 
 	public LayerMask layerMask;
 
 	protected Transform my;
-	Vector3 spawnPoint;
-	Quaternion spawnOrientation;
-	
-	static protected int inMovement;
+    
+    static protected int globalActions;
+    int myActions;
+    protected int MyActions
+    {
+        get { return myActions; }
+        set
+        {
+            globalActions += value - myActions;
+            myActions = value;
+        }
+    }
 	static protected float timeBetweenMoves = 0.06f;
 	static protected float timeToMove = 0.3f;
 	static protected float timeToRotate = 0.3f;
@@ -19,15 +28,15 @@ public class MovableEntity : MonoBehaviour {
 		my = transform;
 	}
 
-	public void SetSpawn(Vector3 position, Quaternion rotation) {
-		spawnPoint = position;
-		spawnOrientation = rotation;
-	}
+    private void OnEnable() {
+        AddMove();
+        GameplayManager.instance.AddActor(this);
+    }
 
-	public void ResetToSpawn() {
-		transform.position = spawnPoint;
-		transform.rotation = spawnOrientation;
-	}
+    private void OnDisable() {
+        GameplayManager.instance.RemoveActor(this);
+    }
+
 
 	public virtual bool CanMove(Vector3 direction) {
 		Vector3 pos = my.position;
@@ -70,9 +79,59 @@ public class MovableEntity : MonoBehaviour {
 		return true;
 	}
 
-	#region Execute Movement
+    #region Move History
 
-	public void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
+    int resetIndex = 0, currentIndex = -1;
+    List<EntityState> moveHistory = new List<EntityState>();
+    
+    public void AddMove()
+    {
+        if (myActions > 0) return;
+
+        EntityState newState = new EntityState(my.position, my.rotation);
+
+        if (currentIndex == -1 || newState != moveHistory[currentIndex])
+        {
+            currentIndex++;
+            moveHistory.Add(newState);
+        }
+    }
+
+    public void CancelLastMove()
+    {
+        if (currentIndex <= 0) return;
+
+        EntityState lastState = moveHistory[currentIndex-1];
+
+        my.transform.position = lastState.position;
+        my.transform.rotation = lastState.rotation;
+
+        moveHistory.RemoveAt(currentIndex);
+        currentIndex--;
+    }
+
+    public void ResetMoves()
+    {
+        if (currentIndex <= resetIndex) return;
+        
+        EntityState lastState = moveHistory[resetIndex];
+
+        my.transform.position = lastState.position;
+        my.transform.rotation = lastState.rotation;
+
+        moveHistory.RemoveRange(resetIndex+1, currentIndex-resetIndex);
+        currentIndex = resetIndex;
+    }
+
+    public void SetCurrentAsResetPoint()
+    {
+        resetIndex = currentIndex;
+    }
+    #endregion
+
+    #region Execute Movement
+
+    public void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
 		StartCoroutine(_ChangePosition(startPos, endPos, duration, direction));
 	}
 	public void ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
@@ -81,7 +140,7 @@ public class MovableEntity : MonoBehaviour {
 
 	IEnumerator _ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
 
-		inMovement++;
+		MyActions++;
 		for (float elapsed = 0, t = 0; elapsed < duration; elapsed += Time.deltaTime) {
 			t = elapsed / duration;
 			my.position = Vector3.Lerp(startPos, endPos, t);
@@ -89,14 +148,14 @@ public class MovableEntity : MonoBehaviour {
 		}
 		my.position = endPos;
 
-		if (EndMove(direction)) {
-			yield return new WaitForSeconds(timeBetweenMoves);
-		}
-		inMovement--;
-	}
+		if (EndMove(direction))
+            yield return new WaitForSeconds(timeBetweenMoves);
+        MyActions--;
+        AddMove();
+    }
 	IEnumerator _ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
 
-		inMovement++;
+        MyActions++;
 		for (float elapsed = 0, t = 0; elapsed < duration; elapsed += Time.deltaTime) {
 			t = elapsed / duration;
 			my.rotation = Quaternion.Lerp(startRot, endRot, t);
@@ -104,11 +163,11 @@ public class MovableEntity : MonoBehaviour {
 		}
 		my.rotation = endRot;
 
-		if (EndMove(direction)) {
-			yield return new WaitForSeconds(timeBetweenMoves);
-		}
-		inMovement--;
-	}
+		if (EndMove(direction))
+            yield return new WaitForSeconds(timeBetweenMoves);
+        MyActions--;
+        AddMove();
+    }
 	#endregion
 	
 	#region Utility

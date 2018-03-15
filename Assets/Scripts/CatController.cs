@@ -17,7 +17,7 @@ public class CatController : MovableEntity {
 	#region MonoBehaviour
 	
 	void Update () {
-		if (inMovement == 0) {
+		if (globalActions == 0) {
 			input.x = Round(Input.GetAxis("Horizontal"));
 			input.z = Round(Input.GetAxis("Vertical"));
 			
