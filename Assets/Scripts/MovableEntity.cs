@@ -8,7 +8,7 @@ public class MovableEntity : MonoBehaviour {
 
 	protected Transform my;
     
-    static protected int globalActions;
+    static public int globalActions;
     int myActions;
     protected int MyActions
     {
@@ -19,10 +19,22 @@ public class MovableEntity : MonoBehaviour {
             myActions = value;
         }
     }
+
+	protected int state;
+	public void SetState(int newState, bool value) {
+		state = state.SetBit(newState, value);
+	}
+	protected virtual void ApplyState(int state) {
+		this.state = state;
+		Debug.LogError(name + " does not have GetState() implemented.");
+	}
+	
 	static protected float timeBetweenMoves = 0.06f;
 	static protected float timeToMove = 0.3f;
 	static protected float timeToRotate = 0.3f;
 	static protected float timeToFall = 0.2f;
+
+	#region MonoBehaviour
 
 	private void Awake() {
 		my = transform;
@@ -36,8 +48,9 @@ public class MovableEntity : MonoBehaviour {
     private void OnDisable() {
         GameplayManager.instance.RemoveActor(this);
     }
+	#endregion
 
-
+	#region Movement
 	public virtual bool CanMove(Vector3 direction) {
 		Vector3 pos = my.position;
 		RaycastHit hit;
@@ -55,7 +68,19 @@ public class MovableEntity : MonoBehaviour {
 		if (CanMove(direction))
 			ChangePosition(my.position, RoundPosition(my.position+direction), timeToMove, direction);
 	}
-	
+
+	protected virtual bool EndMove(Vector3 direction) {
+		Vector3 pos = my.position;
+		if (!Physics.Raycast(pos, -yAxis, 1, layerMask)) {
+			// there's a hole
+			ChangePosition(pos, RoundPosition(pos - yAxis), timeToFall, -yAxis); // fall
+			return false;
+		}
+		return true;
+	}
+	#endregion
+
+	#region Eating
 	public virtual bool CanBeEaten(Vector3 direction) {
 		return false;
 	}
@@ -68,60 +93,55 @@ public class MovableEntity : MonoBehaviour {
 	{
 		get { return true; }
 	}
+	#endregion
 
-	protected virtual bool EndMove(Vector3 direction) {
-		Vector3 pos = my.position;
-		if (!Physics.Raycast(pos, -yAxis, 1, layerMask)) {
-			// there's a hole
-			ChangePosition(pos, RoundPosition(pos - yAxis), timeToFall, -yAxis); // fall
-			return false;
-		}
-		return true;
-	}
+	#region Move History
 
-    #region Move History
-
-    int resetIndex = 0, currentIndex = -1;
+	int resetIndex = 0, currentIndex = -1;
     List<EntityState> moveHistory = new List<EntityState>();
     
     public void AddMove()
     {
         if (myActions > 0) return;
 
-        EntityState newState = new EntityState(my.position, my.rotation);
+        EntityState newState = new EntityState(my.position, my.rotation, state);
 
-        if (currentIndex == -1 || newState != moveHistory[currentIndex])
+        if (!(currentIndex == 0 && newState == moveHistory[0]))
         {
             currentIndex++;
             moveHistory.Add(newState);
         }
     }
 
-    public void CancelLastMove()
-    {
-        if (currentIndex <= 0) return;
+    public void CancelLastMove() {
+		StopCurrentMovement();
+		if (currentIndex <= 0) return;
+		
+		EntityState lastState = moveHistory[currentIndex-1];
 
-        EntityState lastState = moveHistory[currentIndex-1];
-
-        my.transform.position = lastState.position;
+		my.transform.position = lastState.position;
         my.transform.rotation = lastState.rotation;
+		ApplyState(lastState.state);
 
-        moveHistory.RemoveAt(currentIndex);
+		moveHistory.RemoveAt(currentIndex);
         currentIndex--;
-    }
+		StartCoroutine(_WaitAndReset());
+	}
 
-    public void ResetMoves()
-    {
-        if (currentIndex <= resetIndex) return;
-        
-        EntityState lastState = moveHistory[resetIndex];
+    public void ResetMoves() {
+		StopCurrentMovement();
+		if (currentIndex <= resetIndex) return;
 
-        my.transform.position = lastState.position;
+		EntityState lastState = moveHistory[resetIndex];
+
+		my.transform.position = lastState.position;
         my.transform.rotation = lastState.rotation;
+		ApplyState(lastState.state);
 
-        moveHistory.RemoveRange(resetIndex+1, currentIndex-resetIndex);
+		moveHistory.RemoveRange(resetIndex+1, currentIndex-resetIndex);
         currentIndex = resetIndex;
-    }
+		StartCoroutine(_WaitAndReset());
+	}
 
     public void SetCurrentAsResetPoint()
     {
@@ -138,6 +158,19 @@ public class MovableEntity : MonoBehaviour {
 		StartCoroutine(_ChangeRotation(startRot, endRot, duration, direction));
 	}
 
+	public void StopCurrentMovement() {
+		StopAllCoroutines();
+		if (MyActions != 0) {
+			MyActions = 0;
+			globalActions = -1;
+			AddMove(); // Add action mid-move to erase immediately
+		}
+	}
+	IEnumerator _WaitAndReset() {
+		yield return new WaitForSeconds(timeBetweenMoves);
+		globalActions = 0;
+	}
+
 	IEnumerator _ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
 
 		MyActions++;
@@ -151,10 +184,9 @@ public class MovableEntity : MonoBehaviour {
 		if (EndMove(direction))
             yield return new WaitForSeconds(timeBetweenMoves);
         MyActions--;
-        AddMove();
+		GameplayManager.instance.WaitForEndOfMove();
     }
 	IEnumerator _ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
-
         MyActions++;
 		for (float elapsed = 0, t = 0; elapsed < duration; elapsed += Time.deltaTime) {
 			t = elapsed / duration;
@@ -166,8 +198,8 @@ public class MovableEntity : MonoBehaviour {
 		if (EndMove(direction))
             yield return new WaitForSeconds(timeBetweenMoves);
         MyActions--;
-        AddMove();
-    }
+		GameplayManager.instance.WaitForEndOfMove();
+	}
 	#endregion
 	
 	#region Utility

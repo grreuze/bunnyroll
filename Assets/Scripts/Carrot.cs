@@ -4,12 +4,45 @@ public class Carrot : MovableEntity {
 
 	[SerializeField] GameObject partA, partB;
 
-	bool eatenA, eatenB;
+	#region State
 
+	const int EATEN_A = 0, EATEN_B = 1;
+
+	bool EatenA {
+		get	{
+			return state.GetBit(EATEN_A);
+		}
+		set	{
+			SetState(EATEN_A, value);
+		}
+	}
+
+	bool EatenB {
+		get	{
+			return state.GetBit(EATEN_B);
+		}
+		set	{
+			SetState(EATEN_B, value);
+		}
+	}
+	
 	public override bool FullyEaten
 	{
-		get { return eatenA && eatenB; }
+		get { return EatenA && EatenB; }
 	}
+
+	protected override void ApplyState(int state) {
+		this.state = state;
+		bool a = EatenA, b = EatenB;
+		my.parent = null;
+
+		partA.SetActive(!a);
+		partB.SetActive(!b);
+		GetComponent<Collider>().enabled = !(a && b);
+	}
+	#endregion
+
+	#region Movement
 
 	public override bool CanMove(Vector3 direction) {
 		Vector3 pos = my.position;
@@ -52,6 +85,10 @@ public class Carrot : MovableEntity {
 		base.Push(direction);
 	}
 
+	#endregion
+
+	#region Eating
+
 	public override bool CanBeEaten(Vector3 direction) {
 		return Colinear(direction, my.forward);
 	}
@@ -61,10 +98,10 @@ public class Carrot : MovableEntity {
 		position = RoundPosition(position);
 
 		if (position == myPos) {
-			eatenA = true;
+			EatenA = true;
 			partA.SetActive(false);
 		} else if (position == RoundPosition(myPos + my.forward)) {
-			eatenB = true;
+			EatenB = true;
 			partB.SetActive(false);
 		}
 
@@ -72,5 +109,5 @@ public class Carrot : MovableEntity {
 			GetComponent<Collider>().enabled = false;
 		}
 	}
-
+	#endregion
 }

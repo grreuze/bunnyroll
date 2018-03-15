@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
 public class GameplayManager : MonoBehaviour {
 
     public static GameplayManager instance;
+	public static CatController player;
+
     List<MovableEntity> actors = new List<MovableEntity>();
 
     public void OnEnable() {
@@ -28,8 +31,19 @@ public class GameplayManager : MonoBehaviour {
 
     public void AddActor(MovableEntity actor)
     {
-        if (!actors.Contains(actor))
-            actors.Add(actor);
+		if (!actors.Contains(actor)) {
+			actors.Add(actor);
+
+			if (player) {
+				actors.Remove(player);
+				actors.Add(player); // we want the player last in our list
+
+			} else {
+				CatController bunny = actor.GetComponent<CatController>();
+				if (bunny) player = bunny;
+			}
+
+		}
     }
 
     public void RemoveActor(MovableEntity actor)
@@ -37,8 +51,17 @@ public class GameplayManager : MonoBehaviour {
         if (actors.Contains(actor))
             actors.Remove(actor);
     }
+	
+	public void WaitForEndOfMove() {
+		StopAllCoroutines();
+		StartCoroutine(_WaitForEndOfMove());
+	}
 
+	IEnumerator _WaitForEndOfMove() {
+		while (MovableEntity.globalActions > 0) yield return null;
 
-
+		foreach (MovableEntity actor in actors)
+			actor.AddMove();
+	}
 
 }

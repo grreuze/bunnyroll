@@ -4,32 +4,92 @@ public class CatController : MovableEntity {
 	
 	Vector3 input;
 
-	MovableEntity currentlyEating;
+	public MovableEntity currentlyEating;
+
+	#region State
 
 	// States
-	bool onHead;
-	bool onEars;
-	bool suspended;
-	bool eating;
-	bool ateThisFrame;
+	const int ON_HEAD = 0, ON_EARS = 1, SUSPENDED = 2, EATING = 4, JUSTATE = 5;
 
+	bool OnHead	{
+		get	{
+			return state.GetBit(ON_HEAD);
+		}
+		set	{
+			SetState(ON_HEAD, value);
+		}
+	}
+
+	bool OnEars	{
+		get	{
+			return state.GetBit(ON_EARS);
+		}
+		set	{
+			SetState(ON_EARS, value);
+		}
+	}
+
+	bool Suspended {
+		get	{
+			return state.GetBit(SUSPENDED);
+		}
+		set	{
+			SetState(SUSPENDED, value);
+		}
+	}
+
+	bool Eating {
+		get	{
+			return state.GetBit(EATING);
+		}
+		set	{
+			SetState(EATING, value);
+		}
+	}
+
+	bool JustAte {
+		get	{
+			return state.GetBit(JUSTATE);
+		}
+		set	{
+			SetState(JUSTATE, value);
+		}
+	}
+
+
+	protected override void ApplyState(int state) {
+		this.state = state;
+
+		RaycastHit hit;
+		if (Eating && Physics.Raycast(my.position + yAxis + my.forward, -yAxis, out hit, 1, layerMask)) {
+			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
+
+			currentlyEating = movable;
+			movable.transform.parent = my;
+
+		}
+	}
+
+
+	#endregion
 
 	#region MonoBehaviour
-	
+
 	void Update () {
 		if (globalActions == 0) {
 			input.x = Round(Input.GetAxis("Horizontal"));
 			input.z = Round(Input.GetAxis("Vertical"));
 			
-			if (input.sqrMagnitude == 1) {
+			if (input.sqrMagnitude == 1)
 				DetermineMovement();
-			}
 		}
 	}
 	#endregion
 
+	#region Movement
+
 	void DetermineMovement() {
-		if (suspended) {
+		if (Suspended) {
 			if (Colinear(my.forward, input))
 				ExecuteMove(input);
 			return;
@@ -51,7 +111,7 @@ public class CatController : MovableEntity {
 		Quaternion finalRotation = Quaternion.FromToRotation(my.forward, direction) * initialRotation;
 		finalRotation = RoundRotation(finalRotation);
 
-		if (eating) {
+		if (Eating) {
 			Vector3 initialPosition = RoundPosition(my.position + my.forward);
 			Vector3 intermediatePosition = RoundPosition(initialPosition + direction);
 			Vector3 finalPosition = RoundPosition(my.position + direction);
@@ -76,11 +136,11 @@ public class CatController : MovableEntity {
 		Vector3 initialPosition = my.position;
 		Vector3 finalPosition = RoundPosition(initialPosition + direction);
 
-		ateThisFrame = false;
-		bool readyToEat = eating && direction == my.forward;
+		JustAte = false;
+		bool readyToEat = Eating && direction == my.forward;
 
-		if (suspended && readyToEat) {
-			ateThisFrame = true;
+		if (Suspended && readyToEat) {
+			JustAte = true;
 			currentlyEating.Eat(finalPosition);
 
 		} else {
@@ -94,17 +154,17 @@ public class CatController : MovableEntity {
 				if (!HandleCollision(hit.transform, direction)) {
 					// if stuck on your head, your ears push you up
 					if (ShouldRiseOnEars()) {
-						onEars = true;
-						onHead = false;
+						OnEars = true;
+						OnHead = false;
 						ChangePosition(my.position, my.position + yAxis, timeToFall, yAxis);
 					}
 					if (readyToEat) {
-						ateThisFrame = true;
+						JustAte = true;
 						currentlyEating.Eat(finalPosition);
 					} else
 						return; // there's a wall blocking us
 				}
-			} else if (eating && !StandingUp()) {
+			} else if (Eating && !StandingUp()) {
 				if (SameDirection(direction, my.forward) && Physics.Raycast(initialPosition + my.forward, -yAxis, 1, layerMask)) {
 					return; // tu peux pas tourner t'as une carotte dans la bouche
 
@@ -115,15 +175,15 @@ public class CatController : MovableEntity {
 			}
 		}
 
-		if (suspended && direction == -my.forward) {
-			eating = false;
+		if (Suspended && direction == -my.forward) {
+			Eating = false;
 			currentlyEating = null;
 			EndMove(Vector3.zero);
 		} else
 			ChangePosition(initialPosition, finalPosition, timeToMove, direction);
 		
-		if (!eating || (!StandingUp() && !ateThisFrame)) {
-			if (eating)
+		if (!Eating || (!StandingUp() && !JustAte)) {
+			if (Eating)
 				currentlyEating.transform.parent = my;
 
 			Vector3 axis = new Vector3(direction.z, 0, -direction.x);
@@ -133,11 +193,11 @@ public class CatController : MovableEntity {
 			finalRotation = RoundRotation(finalRotation);
 			ChangeRotation(initialRotation, finalRotation, timeToMove, direction);
 		}
-		if (eating && !ateThisFrame && currentlyEating.transform.parent != my)
+		if (Eating && !JustAte && currentlyEating.transform.parent != my)
 			currentlyEating.Push(direction);
 
 		if (currentlyEating && currentlyEating.FullyEaten) {
-			eating = false;
+			Eating = false;
 			currentlyEating = null;
 		}
 	}
@@ -145,20 +205,20 @@ public class CatController : MovableEntity {
 	protected override bool EndMove(Vector3 direction) {
 
 		Vector3 pos = my.position;
-		suspended = false;
+		Suspended = false;
 
 		RaycastHit hit;
 		bool onGround = Physics.Raycast(pos, -yAxis, out hit, 1, layerMask);
 
 		if (SameDirection(my.forward, -yAxis)) {
 
-			if (eating) {
-				ateThisFrame = true;
+			if (Eating) {
+				JustAte = true;
 				currentlyEating.Eat(pos - yAxis);
 			} else if (onGround) {
 				MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 				if (movable) {
-					if (CollideWithMovableObject(movable, -yAxis) && eating) {
+					if (CollideWithMovableObject(movable, -yAxis) && Eating) {
 						HandleFalling(pos);
 					}
 				}
@@ -179,12 +239,12 @@ public class CatController : MovableEntity {
 
 		if (!onGround) {
 			// there's a hole
-			onEars = UpsideDown() && Physics.Raycast(pos, -yAxis, 2, layerMask);
+			OnEars = UpsideDown() && Physics.Raycast(pos, -yAxis, 2, layerMask);
 
-			if (onEars) return true; // on tient sur les oreilles tout va bien
+			if (OnEars) return true; // on tient sur les oreilles tout va bien
 			
-			if (eating && !Colinear(my.forward, yAxis) && Physics.Raycast(pos + my.forward, -yAxis, 1, layerMask)) {
-				suspended = true;
+			if (Eating && !Colinear(my.forward, yAxis) && Physics.Raycast(pos + my.forward, -yAxis, 1, layerMask)) {
+				Suspended = true;
 				return true;
 			}
 			HandleFalling(pos);
@@ -192,12 +252,12 @@ public class CatController : MovableEntity {
 			return false;
 		}
 		
-		if (UpsideDown() && !onEars && !eating) {
-			onHead = true;
+		if (UpsideDown() && !OnEars && !Eating) {
+			OnHead = true;
 			ExecuteMove(direction);
 
 		} else {
-			onEars = onHead = false;
+			OnEars = OnHead = false;
 			if (Physics.Raycast(pos, my.up, out hit, 1, layerMask)) {
 				//mes oreilles sont dans un mur
 
@@ -237,15 +297,17 @@ public class CatController : MovableEntity {
 	bool CollideWithMovableObject(MovableEntity movable, Vector3 direction) {
 		if (movable.CanMove(direction))
 			movable.Push(direction);
-		else if (SameDirection(direction, my.forward) && !eating && movable.CanBeEaten(direction) && !ShouldRiseOnEars()) {
-			eating = true;
+		else if (SameDirection(direction, my.forward) && !Eating && movable.CanBeEaten(direction) && !ShouldRiseOnEars()) {
+			Eating = true;
 			currentlyEating = movable;
-			ateThisFrame = true;
+			JustAte = true;
 			currentlyEating.Eat(my.position + direction);
 		}
 		else return false; // blocked by wall
 		return true;
 	}
+
+	#endregion
 
 	#region Current State Utility
 
@@ -262,7 +324,7 @@ public class CatController : MovableEntity {
 	}
 
 	bool ShouldRiseOnEars() {
-		return onHead && (!Physics.Raycast(my.position, yAxis, 1, layerMask) || eating);
+		return OnHead && (!Physics.Raycast(my.position, yAxis, 1, layerMask) || Eating);
 	}
 
 	#endregion
