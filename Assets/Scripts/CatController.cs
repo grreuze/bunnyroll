@@ -145,7 +145,7 @@ public class CatController : MovableEntity {
 
 		} else {
 
-			if (SameDirection(my.up, input) && OnTheSides() && Physics.Raycast(finalPosition, -yAxis, 1, layerMask)) {
+			if (SameDirection(my.up, direction) && OnTheSides() && Physics.Raycast(finalPosition, -yAxis, 1, layerMask)) {
 				return; // les oreilles se plient pas sur le côté
 			}
 			RaycastHit hit;
@@ -154,9 +154,26 @@ public class CatController : MovableEntity {
 				if (!HandleCollision(hit.transform, direction)) {
 					// if stuck on your head, your ears push you up
 					if (ShouldRiseOnEars()) {
-						OnEars = true;
+
+                        if (Physics.Raycast(my.position, yAxis, out hit, 1, layerMask)) {
+
+                            MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
+                            if (movable && movable.CanMove(yAxis))
+                                movable.Push(yAxis); // should check if not eating first (carrot could be stuck under ceiling)
+                            else return;
+
+                        } else if (Eating && Physics.Raycast(my.position + my.forward, yAxis, out hit, 1, layerMask)) {
+
+                            MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
+                            if (movable && movable.CanMove(yAxis))
+                                movable.Push(yAxis);
+                            else return;
+                        }
+                        
+                        OnEars = true;
 						OnHead = false;
 						ChangePosition(my.position, my.position + yAxis, timeToFall, yAxis);
+                        
 					}
 					if (readyToEat) {
 						JustAte = true;
@@ -165,19 +182,18 @@ public class CatController : MovableEntity {
 						return; // there's a wall blocking us
 				}
 			} else if (Eating && !StandingUp()) {
-				if (SameDirection(direction, my.forward) && Physics.Raycast(initialPosition + my.forward, -yAxis, 1, layerMask)) {
+                if (SameDirection(direction, my.forward) && Physics.Raycast(initialPosition + my.forward, -yAxis, 1, layerMask)) {
+                    // check if movable, if movable, push it
 					return; // tu peux pas tourner t'as une carotte dans la bouche
 
 				} else if (Physics.Linecast(initialPosition, finalPosition + direction, out hit, layerMask)) {
-					//return;
-				}
-				
+					return; // do rotation, bump in wall then come back
+                }
 			}
 		}
 
-		if (Suspended && direction == -my.forward) {
-			Eating = false;
-			currentlyEating = null;
+        if (Suspended && direction == -my.forward) {
+            StopEating();
 			EndMove(Vector3.zero);
 		} else
 			ChangePosition(initialPosition, finalPosition, timeToMove, direction);
@@ -196,10 +212,8 @@ public class CatController : MovableEntity {
 		if (Eating && !JustAte && currentlyEating.transform.parent != my)
 			currentlyEating.Push(direction);
 
-		if (currentlyEating && currentlyEating.FullyEaten) {
-			Eating = false;
-			currentlyEating = null;
-		}
+		if (currentlyEating && currentlyEating.FullyEaten)
+            StopEating();
 	}
 
 	protected override bool EndMove(Vector3 direction) {
@@ -242,12 +256,24 @@ public class CatController : MovableEntity {
 			OnEars = UpsideDown() && Physics.Raycast(pos, -yAxis, 2, layerMask);
 
 			if (OnEars) return true; // on tient sur les oreilles tout va bien
-			
-			if (Eating && !Colinear(my.forward, yAxis) && Physics.Raycast(pos + my.forward, -yAxis, 1, layerMask)) {
-				Suspended = true;
-				return true;
-			}
-			HandleFalling(pos);
+
+            if (Eating && !Colinear(my.forward, yAxis) && Physics.Raycast(pos + my.forward, -yAxis, 1, layerMask)) {
+
+                if (Physics.Raycast(pos + my.forward, yAxis, 1, layerMask)) {
+                    Suspended = true;
+                    return true;// a ceiling holds the carrot, wer'e suspended
+                }
+
+                currentlyEating.transform.parent = my;
+
+                Vector3 axis = new Vector3(-my.forward.z, 0, my.forward.x);
+
+                Quaternion initialRotation = my.rotation;
+                Quaternion finalRotation = Quaternion.AngleAxis(90, axis) * initialRotation;
+                finalRotation = RoundRotation(finalRotation);
+                ChangeRotation(initialRotation, finalRotation, timeToMove, -my.forward);
+            }
+            HandleFalling(pos);
 
 			return false;
 		}
@@ -265,8 +291,25 @@ public class CatController : MovableEntity {
 				if (movable && movable.CanMove(my.up)) {
 					movable.Push(my.up);
 
-				} else if (!Physics.Raycast(pos, -my.up, 1, layerMask)) {
-					ChangePosition(pos, RoundPosition(pos - my.up), timeToMove, -my.up);
+				} else {
+
+                    if (Physics.Raycast(my.position, -my.up, out hit, 1, layerMask)) {
+                        MovableEntity movable2 = hit.transform.GetComponent<MovableEntity>();
+                        if (movable2 && movable2.CanMove(-my.up))
+                            movable2.Push(-my.up); // should check if not eating first (carrot could be stuck under ceiling)
+                        else return true;
+
+                    }
+                    else if (Eating && Physics.Raycast(my.position + my.forward, -my.up, out hit, 1, layerMask)) {
+                        MovableEntity movable2 = hit.transform.GetComponent<MovableEntity>();
+                        if (movable2 && movable2.CanMove(-my.up))
+                            movable2.Push(-my.up);
+                        else return true;
+                    }
+
+                    ChangePosition(pos, RoundPosition(pos - my.up), timeToMove, -my.up);
+
+
 					return false;
 				}
 			}
@@ -307,6 +350,12 @@ public class CatController : MovableEntity {
 		return true;
 	}
 
+    void StopEating() {
+        Eating = false;
+        currentlyEating.transform.parent = null;
+        currentlyEating = null;
+    }
+
 	#endregion
 
 	#region Current State Utility
@@ -324,7 +373,7 @@ public class CatController : MovableEntity {
 	}
 
 	bool ShouldRiseOnEars() {
-		return OnHead && (!Physics.Raycast(my.position, yAxis, 1, layerMask) || Eating);
+		return OnHead && (Eating || !Physics.Raycast(my.position, yAxis, 1, layerMask));
 	}
 
 	#endregion

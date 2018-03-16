@@ -143,8 +143,7 @@ public class MovableEntity : MonoBehaviour {
 		StartCoroutine(_WaitAndReset());
 	}
 
-    public void SetCurrentAsResetPoint()
-    {
+    public void SetCurrentAsResetPoint() {
         resetIndex = currentIndex;
     }
     #endregion
