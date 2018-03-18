@@ -7,6 +7,7 @@ public class MovableEntity : MonoBehaviour {
 	public LayerMask layerMask;
 
 	protected Transform my;
+	protected BoxCollider col;
     
     static public int globalActions;
     int myActions;
@@ -29,15 +30,18 @@ public class MovableEntity : MonoBehaviour {
 		Debug.LogError(name + " does not have GetState() implemented.");
 	}
 	
-	static protected float timeBetweenMoves = 0.06f;
-	static protected float timeToMove = 0.3f;
-	static protected float timeToRotate = 0.3f;
-	static protected float timeToFall = 0.2f;
+	static protected float timeBetweenMoves = 0.05f;
+	static protected float timeToMove = 0.2f;
+	static protected float timeToRotate = 0.2f;
+	static protected float timeToFall = 0.1f;
+
+	public MovableEntity carrying;
 
 	#region MonoBehaviour
 
 	private void Awake() {
 		my = transform;
+		col = GetComponent<BoxCollider>();
 	}
 
     private void OnEnable() {
@@ -55,6 +59,7 @@ public class MovableEntity : MonoBehaviour {
 		Vector3 pos = my.position;
 		RaycastHit hit;
 		if (Physics.Raycast(pos, direction, out hit, 1, layerMask)) {
+			print("want to move but there's " + hit.transform);
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 			if (movable) {
 				movable.Push(direction);
@@ -93,6 +98,11 @@ public class MovableEntity : MonoBehaviour {
 	{
 		get { return true; }
 	}
+
+	public virtual void StopEating() {
+		col.enabled = true;
+	}
+
 	#endregion
 
 	#region Move History

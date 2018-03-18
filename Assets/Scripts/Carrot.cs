@@ -6,7 +6,7 @@ public class Carrot : MovableEntity {
 
 	#region State
 
-	const int EATEN_A = 0, EATEN_B = 1;
+	const int EATEN_A = 0, EATEN_B = 1, HALFEATEN = 2;
 
 	bool EatenA {
 		get	{
@@ -25,7 +25,16 @@ public class Carrot : MovableEntity {
 			SetState(EATEN_B, value);
 		}
 	}
-	
+
+	bool HalfEaten {
+		get	{
+			return state.GetBit(HALFEATEN);
+		}
+		set {
+			SetState(HALFEATEN, value);
+		}
+	}
+
 	public override bool FullyEaten
 	{
 		get { return EatenA && EatenB; }
@@ -38,7 +47,7 @@ public class Carrot : MovableEntity {
 
 		partA.SetActive(!a);
 		partB.SetActive(!b);
-		GetComponent<Collider>().enabled = !(a && b);
+		UpdateCollider();
 	}
 	#endregion
 
@@ -47,13 +56,13 @@ public class Carrot : MovableEntity {
 	public override bool CanMove(Vector3 direction) {
 		Vector3 pos = my.position;
 		RaycastHit hit;
-		if (Physics.Raycast(pos, direction, out hit, 1, layerMask)) {
+		if (!EatenA && Physics.Raycast(pos, direction, out hit, 1, layerMask)) {
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 			if (!(movable && movable.CanMove(direction)))
 				return false;
 			movable.Push(direction);
 		}
-		if (Physics.Raycast(pos + my.forward, direction, out hit, 1, layerMask)) {
+		if (!EatenB && Physics.Raycast(pos + my.forward, direction, out hit, 1, layerMask)) {
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 			if (!(movable && movable.CanMove(direction)))
 				return false;
@@ -105,9 +114,37 @@ public class Carrot : MovableEntity {
 			partB.SetActive(false);
 		}
 
-		if (FullyEaten) {
-			GetComponent<Collider>().enabled = false;
-		}
+		if (FullyEaten)
+			col.enabled = false;
 	}
+
+	public override void StopEating() {
+
+		if (FullyEaten)
+			return;
+
+		HalfEaten = true;
+		UpdateCollider();
+	}
+
+	void UpdateCollider() {
+
+		bool a = EatenA, b = EatenB;
+
+		if (HalfEaten) {
+			col.size = new Vector3(1, 1, 1);
+			if (a)
+				col.center = zAxis;
+			else
+				col.center *= 0;
+		} else {
+			col.center = zAxis / 2;
+			col.size = new Vector3(1, 1, 2);
+		}
+
+		col.enabled = !(a && b);
+	}
+
+
 	#endregion
 }

@@ -79,7 +79,7 @@ public class CatController : MovableEntity {
 		if (globalActions == 0) {
 			input.x = Round(Input.GetAxis("Horizontal"));
 			input.z = Round(Input.GetAxis("Vertical"));
-			
+
 			if (input.sqrMagnitude == 1)
 				DetermineMovement();
 		}
@@ -144,11 +144,8 @@ public class CatController : MovableEntity {
 			currentlyEating.Eat(finalPosition);
 
 		} else {
-
-			if (SameDirection(my.up, direction) && OnTheSides() && Physics.Raycast(finalPosition, -yAxis, 1, layerMask)) {
-				return; // les oreilles se plient pas sur le côté
-			}
 			RaycastHit hit;
+						
 			if (Physics.Linecast(initialPosition, readyToEat ? finalPosition + direction : finalPosition, out hit, layerMask)) {
 
 				if (!HandleCollision(hit.transform, direction)) {
@@ -173,6 +170,8 @@ public class CatController : MovableEntity {
                         OnEars = true;
 						OnHead = false;
 						ChangePosition(my.position, my.position + yAxis, timeToFall, yAxis);
+						if (carrying && carrying.transform.parent != my)
+							carrying.Push(yAxis);
                         
 					}
 					if (readyToEat) {
@@ -182,22 +181,46 @@ public class CatController : MovableEntity {
 						return; // there's a wall blocking us
 				}
 			} else if (Eating && !StandingUp()) {
-                if (SameDirection(direction, my.forward) && Physics.Raycast(initialPosition + my.forward, -yAxis, 1, layerMask)) {
-                    // check if movable, if movable, push it
+				if (SameDirection(direction, my.forward) && Physics.Raycast(initialPosition + my.forward, -yAxis, 1, layerMask)) {
+					// check if movable, if movable, push it
 					return; // tu peux pas tourner t'as une carotte dans la bouche
 
-				} else if (Physics.Linecast(initialPosition, finalPosition + direction, out hit, layerMask)) {
+				} else if (SameDirection(yAxis, my.forward) && Physics.Linecast(initialPosition, finalPosition + direction, out hit, layerMask)) {
+					print("bump");
 					return; // do rotation, bump in wall then come back
-                }
+				}
+			}
+
+
+			if (OnTheSides()) { // les oreilles se plient pas sur le côté
+
+				if (SameDirection(my.up, direction) && Physics.Raycast(finalPosition, -yAxis, 1, layerMask)) {
+					return;
+
+				} else if (SameDirection(-my.up, direction) && Physics.Raycast(my.position + my.up, yAxis, out hit, 1, layerMask)) {
+
+					MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
+
+					if (movable && movable.CanMove(direction)) {
+						// this wall check is gonna be annoying
+
+						movable.Push(direction * 3);
+					} else return;
+				}
 			}
 		}
 
-        if (Suspended && direction == -my.forward) {
-            StopEating();
-			EndMove(Vector3.zero);
-		} else
+		if (Suspended && direction == -my.forward) {
+			currentlyEating.StopEating();
+			StopEating();
+			EndMove(0*zAxis);
+
+		} else {
 			ChangePosition(initialPosition, finalPosition, timeToMove, direction);
-		
+			if (carrying && carrying.transform.parent != my)
+				carrying.Push(direction);
+		}
+
 		if (!Eating || (!StandingUp() && !JustAte)) {
 			if (Eating)
 				currentlyEating.transform.parent = my;
@@ -208,6 +231,8 @@ public class CatController : MovableEntity {
 			Quaternion finalRotation = Quaternion.AngleAxis(90, axis) * initialRotation;
 			finalRotation = RoundRotation(finalRotation);
 			ChangeRotation(initialRotation, finalRotation, timeToMove, direction);
+			if (carrying && carrying.transform.parent != my)
+				carrying.Push(direction);
 		}
 		if (Eating && !JustAte && currentlyEating.transform.parent != my)
 			currentlyEating.Push(direction);
@@ -294,22 +319,21 @@ public class CatController : MovableEntity {
 				} else {
 
                     if (Physics.Raycast(my.position, -my.up, out hit, 1, layerMask)) {
-                        MovableEntity movable2 = hit.transform.GetComponent<MovableEntity>();
-                        if (movable2 && movable2.CanMove(-my.up))
-                            movable2.Push(-my.up); // should check if not eating first (carrot could be stuck under ceiling)
-                        else return true;
+						movable = hit.transform.GetComponent<MovableEntity>();
+						if (movable && movable.CanMove(-my.up)) {
+							movable.Push(-my.up); // should check if not eating first (carrot could be stuck under ceiling)
+							carrying = movable;
+						} else return true;
 
                     }
                     else if (Eating && Physics.Raycast(my.position + my.forward, -my.up, out hit, 1, layerMask)) {
-                        MovableEntity movable2 = hit.transform.GetComponent<MovableEntity>();
-                        if (movable2 && movable2.CanMove(-my.up))
-                            movable2.Push(-my.up);
-                        else return true;
+						movable = hit.transform.GetComponent<MovableEntity>();
+						if (movable && movable.CanMove(-my.up)) {
+							movable.Push(-my.up);
+							currentlyEating.carrying = movable;
+						} else return true;
                     }
-
                     ChangePosition(pos, RoundPosition(pos - my.up), timeToMove, -my.up);
-
-
 					return false;
 				}
 			}
@@ -350,7 +374,7 @@ public class CatController : MovableEntity {
 		return true;
 	}
 
-    void StopEating() {
+    public override void StopEating() {
         Eating = false;
         currentlyEating.transform.parent = null;
         currentlyEating = null;
