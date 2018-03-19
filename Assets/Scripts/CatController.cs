@@ -5,6 +5,7 @@ public class CatController : MovableEntity {
 	Vector3 input;
 
 	public MovableEntity currentlyEating;
+    float lastInput;
 
 	#region State
 
@@ -80,8 +81,27 @@ public class CatController : MovableEntity {
 			input.x = Round(Input.GetAxis("Horizontal"));
 			input.z = Round(Input.GetAxis("Vertical"));
 
-			if (input.sqrMagnitude == 1)
-				DetermineMovement();
+            if (Input.GetKeyUp(KeyCode.RightArrow))
+            {
+                print("STOP: " + input);
+            }
+
+            print("Input: " + input);
+
+            if (input.sqrMagnitude == 1 && Time.time > lastInput + timeBetweenMoves)
+            {
+                DetermineMovement();
+
+                if (Physics.Raycast(my.position + input * 2, -yAxis, 1, layerMask))
+                    lastInput = Time.time;
+                else
+                {
+                    print("attention tombe pas");
+                    lastInput = Time.time + timeBetweenMoves * 10;
+                }
+            }
+            else if (input.sqrMagnitude == 0)
+                lastInput = 0;
 		}
 	}
 	#endregion

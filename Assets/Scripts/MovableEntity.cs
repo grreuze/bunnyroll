@@ -27,10 +27,10 @@ public class MovableEntity : MonoBehaviour {
 	}
 	protected virtual void ApplyState(int state) {
 		this.state = state;
-		Debug.LogError(name + " does not have GetState() implemented.");
+		Debug.LogError(name + " does not have ApplyState() implemented.");
 	}
 	
-	static protected float timeBetweenMoves = 0.05f;
+	static protected float timeBetweenMoves = 0.02f;
 	static protected float timeToMove = 0.2f;
 	static protected float timeToRotate = 0.2f;
 	static protected float timeToFall = 0.1f;
