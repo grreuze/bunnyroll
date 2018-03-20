@@ -42,7 +42,6 @@ public class GameplayManager : MonoBehaviour {
 				CatController bunny = actor.GetComponent<CatController>();
 				if (bunny) player = bunny;
 			}
-
 		}
     }
 

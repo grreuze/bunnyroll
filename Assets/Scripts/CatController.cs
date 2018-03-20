@@ -80,14 +80,7 @@ public class CatController : MovableEntity {
 		if (globalActions == 0) {
 			input.x = Round(Input.GetAxis("Horizontal"));
 			input.z = Round(Input.GetAxis("Vertical"));
-
-            if (Input.GetKeyUp(KeyCode.RightArrow))
-            {
-                print("STOP: " + input);
-            }
-
-            print("Input: " + input);
-
+            
             if (input.sqrMagnitude == 1 && Time.time > lastInput + timeBetweenMoves)
             {
                 DetermineMovement();
@@ -95,10 +88,7 @@ public class CatController : MovableEntity {
                 if (Physics.Raycast(my.position + input * 2, -yAxis, 1, layerMask))
                     lastInput = Time.time;
                 else
-                {
-                    print("attention tombe pas");
                     lastInput = Time.time + timeBetweenMoves * 10;
-                }
             }
             else if (input.sqrMagnitude == 0)
                 lastInput = 0;
@@ -277,9 +267,8 @@ public class CatController : MovableEntity {
 			} else if (onGround) {
 				MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 				if (movable) {
-					if (CollideWithMovableObject(movable, -yAxis) && Eating) {
+					if (CollideWithMovableObject(movable, -yAxis) && Eating)
 						HandleFalling(pos);
-					}
 				}
 			}
 		}
@@ -288,9 +277,9 @@ public class CatController : MovableEntity {
 
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 			if (movable) {
-				if (movable.CanMove(direction)) {
+				if (movable.CanMove(direction))
 					movable.Push(direction);
-				} else if (movable.CanMove(yAxis))
+				else if (movable.CanMove(yAxis))
 					movable.Push(yAxis);
 				return false;
 			}
@@ -350,7 +339,7 @@ public class CatController : MovableEntity {
 						movable = hit.transform.GetComponent<MovableEntity>();
 						if (movable && movable.CanMove(-my.up)) {
 							movable.Push(-my.up);
-							currentlyEating.carrying = movable;
+							carrying = movable;
 						} else return true;
                     }
                     ChangePosition(pos, RoundPosition(pos - my.up), timeToMove, -my.up);
