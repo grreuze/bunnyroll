@@ -71,14 +71,27 @@ public class Carrot : MovableEntity {
 		return true;
 	}
 
-	protected override bool EndMove(Vector3 direction) {
+	public override bool EndMove(Vector3 direction) {
 		Vector3 pos = my.position;
-		if (!Physics.Raycast(pos, -yAxis, 1, layerMask) && !Physics.Raycast(pos + my.forward, -yAxis, 1, layerMask)) {
-			// there's a hole
-			ChangePosition(pos, RoundPosition(pos - yAxis), timeToFall, -yAxis); // fall
-			return false;
-		}
-		return true;
+        RaycastHit hitUnder, hitForward;
+        MovableEntity carrier = null;
+
+        bool somethingUnder = Physics.Raycast(pos, -yAxis, out hitUnder, 1, layerMask);
+        bool underForward = Physics.Raycast(pos + my.forward, - yAxis, out hitForward, 1, layerMask);
+
+        if (!somethingUnder && !underForward) {
+            // there's a hole
+            CarriedBy(null);
+            ChangePosition(pos, RoundPosition(pos - yAxis), timeToFall, -yAxis); // fall
+            return false;
+        }
+        else if (somethingUnder && !underForward)
+            carrier = hitUnder.transform.GetComponent<MovableEntity>();
+        else if (underForward && !somethingUnder)
+            carrier = hitForward.transform.GetComponent<MovableEntity>();
+
+        CarriedBy(carrier);
+        return true;
 	}
 
 	public override void Push(Vector3 direction) {
@@ -125,6 +138,9 @@ public class Carrot : MovableEntity {
 
 		HalfEaten = true;
 		UpdateCollider();
+
+        if (carrying)
+            carrying.CarriedBy(null);
 	}
 
 	void UpdateCollider() {
