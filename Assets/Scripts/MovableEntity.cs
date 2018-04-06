@@ -35,7 +35,7 @@ public class MovableEntity : MonoBehaviour {
 	static protected float timeToRotate = 0.2f;
 	static protected float timeToFall = 0.1f;
 
-	public MovableEntity carrying;
+	public MovableEntity carrying, carriedBy;
 
 	#region MonoBehaviour
 
@@ -59,7 +59,6 @@ public class MovableEntity : MonoBehaviour {
 		Vector3 pos = my.position;
 		RaycastHit hit;
 		if (Physics.Raycast(pos, direction, out hit, 1, layerMask)) {
-			print("want to move but there's " + hit.transform);
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 			if (movable) {
 				movable.Push(direction);
@@ -70,11 +69,14 @@ public class MovableEntity : MonoBehaviour {
 	}
 
 	public virtual void Push(Vector3 direction) {
-		if (CanMove(direction))
-			ChangePosition(my.position, RoundPosition(my.position+direction), timeToMove, direction);
+		if (CanMove(direction)) {
+            ChangePosition(my.position, RoundPosition(my.position + direction), timeToMove, direction);
+            if (carrying)
+                carrying.Push(direction);
+        }
 	}
 
-	protected virtual bool EndMove(Vector3 direction) {
+	public virtual bool EndMove(Vector3 direction) {
 		Vector3 pos = my.position;
 		if (!Physics.Raycast(pos, -yAxis, 1, layerMask)) {
 			// there's a hole
@@ -83,10 +85,20 @@ public class MovableEntity : MonoBehaviour {
 		}
 		return true;
 	}
-	#endregion
+    #endregion
+    
+    public void CarriedBy(MovableEntity movable) {
+        if (movable)
+            movable.carrying = this;
+        else if (carriedBy)
+            carriedBy.carrying = null;
 
-	#region Eating
-	public virtual bool CanBeEaten(Vector3 direction) {
+        carriedBy = movable;
+    }
+
+
+    #region Eating
+    public virtual bool CanBeEaten(Vector3 direction) {
 		return false;
 	}
 
@@ -110,8 +122,7 @@ public class MovableEntity : MonoBehaviour {
 	int resetIndex = 0, currentIndex = -1;
     List<EntityState> moveHistory = new List<EntityState>();
     
-    public void AddMove()
-    {
+    public void AddMove() {
         if (myActions > 0) return;
 
         EntityState newState = new EntityState(my.position, my.rotation, state);
@@ -160,10 +171,10 @@ public class MovableEntity : MonoBehaviour {
 
     #region Execute Movement
 
-    public void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
+    public virtual void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
 		StartCoroutine(_ChangePosition(startPos, endPos, duration, direction));
 	}
-	public void ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
+	public virtual void ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
 		StartCoroutine(_ChangeRotation(startRot, endRot, duration, direction));
 	}
 

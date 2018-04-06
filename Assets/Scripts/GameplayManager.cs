@@ -53,7 +53,11 @@ public class GameplayManager : MonoBehaviour {
 	
 	public void WaitForEndOfMove() {
 		StopAllCoroutines();
-		StartCoroutine(_WaitForEndOfMove());
+
+        //foreach (MovableEntity actor in actors)
+        //    actor.EndMove(Vector3.zero);
+
+        StartCoroutine(_WaitForEndOfMove());
 	}
 
 	IEnumerator _WaitForEndOfMove() {

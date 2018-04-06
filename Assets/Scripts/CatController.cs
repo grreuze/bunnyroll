@@ -94,11 +94,32 @@ public class CatController : MovableEntity {
                 lastInput = 0;
 		}
 	}
-	#endregion
+    #endregion
 
-	#region Movement
+    #region Movement
 
-	void DetermineMovement() {
+    public override void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
+
+        if (carrying && carrying.transform.parent != my)
+            carrying.Push(yAxis);
+        else if (currentlyEating && currentlyEating.carrying && currentlyEating.carrying.transform.parent != my)
+            currentlyEating.carrying.Push(yAxis);
+
+        base.ChangePosition(startPos, endPos, duration, direction);
+    }
+
+    public override void ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
+        
+        if (carrying && carrying.transform.parent != my)
+            carrying.Push(yAxis);
+        else if (currentlyEating && currentlyEating.carrying && currentlyEating.carrying.transform.parent != my)
+            currentlyEating.carrying.Push(yAxis);
+
+        base.ChangeRotation(startRot, endRot, duration, direction);
+    }
+
+
+    void DetermineMovement() {
 		if (Suspended) {
 			if (Colinear(my.forward, input))
 				ExecuteMove(input);
@@ -180,10 +201,8 @@ public class CatController : MovableEntity {
                         OnEars = true;
 						OnHead = false;
 						ChangePosition(my.position, my.position + yAxis, timeToFall, yAxis);
-						if (carrying && carrying.transform.parent != my)
-							carrying.Push(yAxis);
-                        
-					}
+
+                    }
 					if (readyToEat) {
 						JustAte = true;
 						currentlyEating.Eat(finalPosition);
@@ -225,11 +244,8 @@ public class CatController : MovableEntity {
 			StopEating();
 			EndMove(0*zAxis);
 
-		} else {
+		} else
 			ChangePosition(initialPosition, finalPosition, timeToMove, direction);
-			if (carrying && carrying.transform.parent != my)
-				carrying.Push(direction);
-		}
 
 		if (!Eating || (!StandingUp() && !JustAte)) {
 			if (Eating)
@@ -241,9 +257,7 @@ public class CatController : MovableEntity {
 			Quaternion finalRotation = Quaternion.AngleAxis(90, axis) * initialRotation;
 			finalRotation = RoundRotation(finalRotation);
 			ChangeRotation(initialRotation, finalRotation, timeToMove, direction);
-			if (carrying && carrying.transform.parent != my)
-				carrying.Push(direction);
-		}
+        }
 		if (Eating && !JustAte && currentlyEating.transform.parent != my)
 			currentlyEating.Push(direction);
 
@@ -251,7 +265,7 @@ public class CatController : MovableEntity {
             StopEating();
 	}
 
-	protected override bool EndMove(Vector3 direction) {
+	public override bool EndMove(Vector3 direction) {
 
 		Vector3 pos = my.position;
 		Suspended = false;
@@ -288,7 +302,6 @@ public class CatController : MovableEntity {
 		if (!onGround) {
 			// there's a hole
 			OnEars = UpsideDown() && Physics.Raycast(pos, -yAxis, 2, layerMask);
-
 			if (OnEars) return true; // on tient sur les oreilles tout va bien
 
             if (Eating && !Colinear(my.forward, yAxis) && Physics.Raycast(pos + my.forward, -yAxis, 1, layerMask)) {
@@ -314,7 +327,7 @@ public class CatController : MovableEntity {
 		
 		if (UpsideDown() && !OnEars && !Eating) {
 			OnHead = true;
-			ExecuteMove(direction);
+            ExecuteMove(direction);
 
 		} else {
 			OnEars = OnHead = false;
@@ -331,7 +344,7 @@ public class CatController : MovableEntity {
 						movable = hit.transform.GetComponent<MovableEntity>();
 						if (movable && movable.CanMove(-my.up)) {
 							movable.Push(-my.up); // should check if not eating first (carrot could be stuck under ceiling)
-							carrying = movable;
+							//carrying = movable;
 						} else return true;
 
                     }
@@ -339,7 +352,7 @@ public class CatController : MovableEntity {
 						movable = hit.transform.GetComponent<MovableEntity>();
 						if (movable && movable.CanMove(-my.up)) {
 							movable.Push(-my.up);
-							carrying = movable;
+							//carrying = movable;
 						} else return true;
                     }
                     ChangePosition(pos, RoundPosition(pos - my.up), timeToMove, -my.up);
