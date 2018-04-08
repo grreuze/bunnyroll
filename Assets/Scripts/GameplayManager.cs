@@ -7,6 +7,8 @@ public class GameplayManager : MonoBehaviour {
     public static GameplayManager instance;
 	public static CatController player;
 
+	public static bool inLevel;
+
     List<MovableEntity> actors = new List<MovableEntity>();
 
     public void OnEnable() {
