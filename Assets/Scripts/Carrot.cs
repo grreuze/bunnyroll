@@ -3,6 +3,7 @@
 public class Carrot : MovableEntity {
 
 	[SerializeField] GameObject partA, partB;
+    public Level level;
 
 	#region State
 
@@ -127,8 +128,10 @@ public class Carrot : MovableEntity {
 			partB.SetActive(false);
 		}
 
-		if (FullyEaten)
-			col.enabled = false;
+        if (FullyEaten) {
+            col.enabled = false;
+            level.IsComplete();
+        }
 	}
 
 	public override void StopEating() {

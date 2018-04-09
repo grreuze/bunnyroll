@@ -5,9 +5,11 @@ using UnityEngine;
 public class GameplayManager : MonoBehaviour {
 
     public static GameplayManager instance;
-	public static CatController player;
+	public static BunnyController player;
 
 	public static bool inLevel;
+
+    public GameObject[] levels = new GameObject[0];
 
     List<MovableEntity> actors = new List<MovableEntity>();
 
@@ -31,6 +33,8 @@ public class GameplayManager : MonoBehaviour {
         }
     }
 
+    #region Move History
+
     public void AddActor(MovableEntity actor)
     {
 		if (!actors.Contains(actor)) {
@@ -41,7 +45,7 @@ public class GameplayManager : MonoBehaviour {
 				actors.Add(player); // we want the player last in our list
 
 			} else {
-				CatController bunny = actor.GetComponent<CatController>();
+				BunnyController bunny = actor.GetComponent<BunnyController>();
 				if (bunny) player = bunny;
 			}
 		}
@@ -68,5 +72,29 @@ public class GameplayManager : MonoBehaviour {
 		foreach (MovableEntity actor in actors)
 			actor.AddMove();
 	}
+
+    #endregion
+
+    #region Level Management
+
+    public void EnterLevel(Transform level) {
+        if (!inLevel) {
+            inLevel = true;
+
+            foreach (GameObject lvl in levels)
+                lvl.SetActive(false);
+
+            level.gameObject.SetActive(true);
+        }
+    }
+
+    public void ExitLevel() {
+        inLevel = false;
+
+        foreach (GameObject lvl in levels)
+            lvl.SetActive(true);
+    }
+    
+    #endregion
 
 }

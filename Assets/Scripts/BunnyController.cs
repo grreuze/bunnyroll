@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class CatController : MovableEntity {
+public class BunnyController : MovableEntity {
 	
 	Vector3 input;
 
@@ -273,6 +273,12 @@ public class CatController : MovableEntity {
 		RaycastHit hit;
 		bool onGround = Physics.Raycast(pos, -yAxis, out hit, 1, layerMask);
 
+        if (StandingUp() && onGround) {
+            LevelEntrance entry = hit.transform.GetComponent<LevelEntrance>();
+            if (entry)
+                entry.EnterLevel();
+        }
+
 		if (SameDirection(my.forward, -yAxis)) {
 
 			if (Eating) {
@@ -286,19 +292,7 @@ public class CatController : MovableEntity {
 				}
 			}
 		}
-
-		if (StandingUp() && Physics.Raycast(pos, yAxis, out hit, 1, layerMask)) {
-
-			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
-			if (movable) {
-				if (movable.CanMove(direction))
-					movable.Push(direction);
-				else if (movable.CanMove(yAxis))
-					movable.Push(yAxis);
-				return false;
-			}
-		}
-
+        
 		if (!onGround) {
 			// there's a hole
 			OnEars = UpsideDown() && Physics.Raycast(pos, -yAxis, 2, layerMask);
@@ -323,9 +317,21 @@ public class CatController : MovableEntity {
             HandleFalling(pos);
 
 			return false;
-		}
-		
-		if (UpsideDown() && !OnEars && !Eating) {
+        }
+
+        if (StandingUp() && Physics.Raycast(pos, yAxis, out hit, 1, layerMask)) {
+
+            MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
+            if (movable) {
+                if (movable.CanMove(direction))
+                    movable.Push(direction);
+                else if (movable.CanMove(yAxis))
+                    movable.Push(yAxis);
+                return false;
+            }
+        }
+
+        if (UpsideDown() && !OnEars && !Eating) {
 			OnHead = true;
             ExecuteMove(direction);
 

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class CatCamera : MonoBehaviour {
+public class BunnyCamera : MonoBehaviour {
 
 	[SerializeField] Transform target;
 	[SerializeField] Vector3 baseOffset = new Vector3(0, 1, -1);
