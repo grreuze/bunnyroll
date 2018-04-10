@@ -56,7 +56,11 @@ public class GameplayManager : MonoBehaviour {
         if (actors.Contains(actor))
             actors.Remove(actor);
     }
-	
+
+	public void SetNewResetPoint() {
+
+	}
+
 	public void WaitForEndOfMove() {
 		StopAllCoroutines();
 

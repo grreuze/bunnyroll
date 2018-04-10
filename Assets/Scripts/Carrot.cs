@@ -130,7 +130,7 @@ public class Carrot : MovableEntity {
 
         if (FullyEaten) {
             col.enabled = false;
-            level.IsComplete();
+            level?.IsComplete();
         }
 	}
 
