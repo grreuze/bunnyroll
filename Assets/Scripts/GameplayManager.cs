@@ -58,8 +58,9 @@ public class GameplayManager : MonoBehaviour {
     }
 
 	public void SetNewResetPoint() {
-
-	}
+        foreach (MovableEntity actor in actors)
+            actor.SetCurrentAsResetPoint();
+    }
 
 	public void WaitForEndOfMove() {
 		StopAllCoroutines();
@@ -89,6 +90,7 @@ public class GameplayManager : MonoBehaviour {
                 lvl.SetActive(false);
 
             level.gameObject.SetActive(true);
+            SetNewResetPoint();
         }
     }
 
@@ -97,6 +99,8 @@ public class GameplayManager : MonoBehaviour {
 
         foreach (GameObject lvl in levels)
             lvl.SetActive(true);
+        
+        SetNewResetPoint();
     }
     
     #endregion

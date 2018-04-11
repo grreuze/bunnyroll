@@ -7,39 +7,31 @@ public class Carrot : MovableEntity {
 
 	#region State
 
-	const int EATEN_A = 0, EATEN_B = 1, HALFEATEN = 2;
+	const int EATEN_A = 0, EATEN_B = 1, HALFEATEN = 2, FROZEN = 3;
 
 	bool EatenA {
-		get	{
-			return state.GetBit(EATEN_A);
-		}
-		set	{
-			SetState(EATEN_A, value);
-		}
+		get	{ return state.GetBit(EATEN_A);	}
+		set	{ SetState(EATEN_A, value);	}
 	}
 
 	bool EatenB {
-		get	{
-			return state.GetBit(EATEN_B);
-		}
-		set	{
-			SetState(EATEN_B, value);
-		}
+		get	{ return state.GetBit(EATEN_B);	}
+		set	{ SetState(EATEN_B, value);	}
 	}
 
 	bool HalfEaten {
-		get	{
-			return state.GetBit(HALFEATEN);
-		}
-		set {
-			SetState(HALFEATEN, value);
-		}
+		get	{ return state.GetBit(HALFEATEN); }
+		set { SetState(HALFEATEN, value); }
 	}
 
-	public override bool FullyEaten
-	{
+	public override bool FullyEaten {
 		get { return EatenA && EatenB; }
 	}
+
+    bool Frozen {
+        get { return state.GetBit(FROZEN); }
+        set { SetState(FROZEN, value); }
+    }
 
 	protected override void ApplyState(int state) {
 		this.state = state;
@@ -55,6 +47,8 @@ public class Carrot : MovableEntity {
 	#region Movement
 
 	public override bool CanMove(Vector3 direction) {
+        if (Frozen) return false;
+
 		Vector3 pos = my.position;
 		RaycastHit hit;
 		if (!EatenA && Physics.Raycast(pos, direction, out hit, 1, layerMask)) {
@@ -113,7 +107,7 @@ public class Carrot : MovableEntity {
 	#region Eating
 
 	public override bool CanBeEaten(Vector3 direction) {
-		return Colinear(direction, my.forward);
+		return !Frozen && Colinear(direction, my.forward);
 	}
 
 	public override void Eat(Vector3 position) {
