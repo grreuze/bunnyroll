@@ -8,9 +8,9 @@ public class GameplayManager : MonoBehaviour {
 	public static BunnyController player;
 
 	public static bool inLevel;
-
-    public GameObject[] levels = new GameObject[0];
-
+    public static int activeLevel;
+    
+    List<GameObject> levels = new List<GameObject>();
     List<MovableEntity> actors = new List<MovableEntity>();
 
     public void OnEnable() {
@@ -59,7 +59,7 @@ public class GameplayManager : MonoBehaviour {
 
 	public void SetNewResetPoint() {
         foreach (MovableEntity actor in actors)
-            actor.SetCurrentAsResetPoint();
+            actor.SetResetPoint(+1);
     }
 
 	public void WaitForEndOfMove() {
@@ -82,7 +82,14 @@ public class GameplayManager : MonoBehaviour {
 
     #region Level Management
 
-    public void EnterLevel(Transform level) {
+    public void AddLevel(Level level) {
+        if (!levels.Contains(level.gameObject)) {
+            levels.Add(level.gameObject);
+            level.ID = levels.Count - 1;
+        }
+    }
+
+    public void EnterLevel(Level level) {
         if (!inLevel) {
             inLevel = true;
 
@@ -90,19 +97,31 @@ public class GameplayManager : MonoBehaviour {
                 lvl.SetActive(false);
 
             level.gameObject.SetActive(true);
+            activeLevel = level.ID;
+
             SetNewResetPoint();
+
+            OnEnterLevel?.Invoke(level.ID);
         }
     }
 
-    public void ExitLevel() {
+    public void ExitLevel(bool completed) {
         inLevel = false;
 
         foreach (GameObject lvl in levels)
             lvl.SetActive(true);
         
         SetNewResetPoint();
+
+        OnExitLevel?.Invoke(activeLevel, completed);
     }
     
+    public delegate void EnterLevelEvent(int ID);
+    public static event EnterLevelEvent OnEnterLevel;
+
+    public delegate void ExitLevelEvent(int ID, bool completed);
+    public static event ExitLevelEvent OnExitLevel;
+
     #endregion
 
 }

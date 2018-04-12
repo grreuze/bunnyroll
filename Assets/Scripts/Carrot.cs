@@ -33,6 +33,11 @@ public class Carrot : MovableEntity {
         set { SetState(FROZEN, value); }
     }
 
+    public void SetFrozen(bool freeze) {
+        Frozen = freeze;
+        // change material here
+    }
+
 	protected override void ApplyState(int state) {
 		this.state = state;
 		bool a = EatenA, b = EatenB;
@@ -160,4 +165,5 @@ public class Carrot : MovableEntity {
 
 
 	#endregion
+    
 }

@@ -88,7 +88,7 @@ public class BunnyController : MovableEntity {
                 if (Physics.Raycast(my.position + input * 2, -yAxis, 1, layerMask))
                     lastInput = Time.time;
                 else
-                    lastInput = Time.time + timeBetweenMoves * 10;
+                    lastInput = Time.time + timeBeforeFallInput;
             }
             else if (input.sqrMagnitude == 0)
                 lastInput = 0;

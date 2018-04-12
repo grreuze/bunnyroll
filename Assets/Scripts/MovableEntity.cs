@@ -30,12 +30,13 @@ public class MovableEntity : MonoBehaviour {
 		Debug.LogError(name + " does not have ApplyState() implemented.");
 	}
 	
-	static protected float timeBetweenMoves = 0.02f;
+	static protected float timeBetweenMoves = 0.0f;
 	static protected float timeToMove = 0.2f;
 	static protected float timeToRotate = 0.2f;
 	static protected float timeToFall = 0.1f;
+    static protected float timeBeforeFallInput = 0.2f;
 
-	public MovableEntity carrying, carriedBy;
+    public MovableEntity carrying, carriedBy;
 
 	#region MonoBehaviour
 
@@ -164,8 +165,8 @@ public class MovableEntity : MonoBehaviour {
 		StartCoroutine(_WaitAndReset());
 	}
 
-    public void SetCurrentAsResetPoint() {
-        resetIndex = currentIndex;
+    public void SetResetPoint(int offset = 0) {
+        resetIndex = currentIndex + offset;
     }
     #endregion
 
