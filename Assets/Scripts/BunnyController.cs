@@ -62,7 +62,8 @@ public class BunnyController : MovableEntity {
 		this.state = state;
 
 		RaycastHit hit;
-		if (Eating && Physics.Raycast(my.position + yAxis + my.forward, -yAxis, out hit, 1, layerMask)) {
+        // this does not work if we're eating a carrot downward (or a few other cases)
+		if (Eating && Physics.Raycast(my.position + my.up + my.forward, -my.up, out hit, 1, layerMask)) {
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 
 			currentlyEating = movable;
@@ -186,6 +187,7 @@ public class BunnyController : MovableEntity {
                         if (Physics.Raycast(my.position, yAxis, out hit, 1, layerMask)) {
 
                             MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
+                            print("movable above: " + movable);
                             if (movable && movable.CanMove(yAxis))
                                 movable.Push(yAxis); // should check if not eating first (carrot could be stuck under ceiling)
                             else return;
@@ -425,7 +427,7 @@ public class BunnyController : MovableEntity {
 	}
 
 	bool ShouldRiseOnEars() {
-		return OnHead && (Eating || !Physics.Raycast(my.position, yAxis, 1, layerMask));
+        return OnHead;// && (Eating || !Physics.Raycast(my.position, yAxis, 1, layerMask));
 	}
 
 	#endregion
