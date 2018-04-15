@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class MovableEntity : MonoBehaviour {
+public class MovableEntity : RecordableObject {
 
 	public LayerMask layerMask;
 
@@ -17,18 +17,12 @@ public class MovableEntity : MonoBehaviour {
         set
         {
             globalActions += value - myActions;
+			if (myActions != value && globalActions == 0) {
+				GameplayManager.moveIndex++;
+			}
             myActions = value;
         }
     }
-
-	protected int state;
-	public void SetState(int newState, bool value) {
-		state = state.SetBit(newState, value);
-	}
-	protected virtual void ApplyState(int state) {
-		this.state = state;
-		Debug.LogError(name + " does not have ApplyState() implemented.");
-	}
 	
 	static protected float timeBetweenMoves = 0.0f;
 	static protected float timeToMove = 0.2f;
@@ -44,15 +38,6 @@ public class MovableEntity : MonoBehaviour {
 		my = transform;
 		col = GetComponent<BoxCollider>();
 	}
-
-    private void OnEnable() {
-        AddMove();
-        GameplayManager.instance.AddActor(this);
-    }
-
-    private void OnDisable() {
-        GameplayManager.instance.RemoveActor(this);
-    }
 	#endregion
 
 	#region Movement
@@ -121,54 +106,18 @@ public class MovableEntity : MonoBehaviour {
 	#region Move History
 
 	int resetIndex = 0, currentIndex = -1;
-    List<EntityState> moveHistory = new List<EntityState>();
-    
+
+	EntityState GetCurrentState() {
+		return new EntityState(this, gameObject.activeSelf, my.position, my.rotation, state);
+	}
+
     public void AddMove() {
-        if (myActions > 0) return;
-
-        EntityState newState = new EntityState(my.position, my.rotation, state);
-
-        if (!(currentIndex == 0 && newState == moveHistory[0]))
-        {
-            currentIndex++;
-            moveHistory.Add(newState);
-        }
+		if (MyActions > 0) return;
+		GameplayManager.instance.AddMove(GetCurrentState());
     }
-
-    public void CancelLastMove() {
-		StopCurrentMovement();
-		if (currentIndex <= 0) return;
-		
-		EntityState lastState = moveHistory[currentIndex-1];
-
-		my.transform.position = lastState.position;
-        my.transform.rotation = lastState.rotation;
-		ApplyState(lastState.state);
-
-		moveHistory.RemoveAt(currentIndex);
-        currentIndex--;
-		StartCoroutine(_WaitAndReset());
-	}
-
-    public void ResetMoves() {
-		StopCurrentMovement();
-		if (currentIndex <= resetIndex) return;
-
-		EntityState lastState = moveHistory[resetIndex];
-
-		my.transform.position = lastState.position;
-        my.transform.rotation = lastState.rotation;
-		ApplyState(lastState.state);
-
-		moveHistory.RemoveRange(resetIndex+1, currentIndex-resetIndex);
-        currentIndex = resetIndex;
-		StartCoroutine(_WaitAndReset());
-	}
-
-    public void SetResetPoint(int offset = 0) {
-        resetIndex = currentIndex + offset;
-    }
+	
     #endregion
+
 
     #region Execute Movement
 
@@ -183,8 +132,6 @@ public class MovableEntity : MonoBehaviour {
 		StopAllCoroutines();
 		if (MyActions != 0) {
 			MyActions = 0;
-			globalActions = -1;
-			AddMove(); // Add action mid-move to erase immediately
 		}
 	}
 	IEnumerator _WaitAndReset() {
@@ -193,7 +140,6 @@ public class MovableEntity : MonoBehaviour {
 	}
 
 	IEnumerator _ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
-
 		MyActions++;
 		for (float elapsed = 0, t = 0; elapsed < duration; elapsed += Time.deltaTime) {
 			t = elapsed / duration;
@@ -205,7 +151,6 @@ public class MovableEntity : MonoBehaviour {
 		if (EndMove(direction))
             yield return new WaitForSeconds(timeBetweenMoves);
         MyActions--;
-		GameplayManager.instance.WaitForEndOfMove();
     }
 	IEnumerator _ChangeRotation(Quaternion startRot, Quaternion endRot, float duration, Vector3 direction) {
         MyActions++;
@@ -219,7 +164,6 @@ public class MovableEntity : MonoBehaviour {
 		if (EndMove(direction))
             yield return new WaitForSeconds(timeBetweenMoves);
         MyActions--;
-		GameplayManager.instance.WaitForEndOfMove();
 	}
 	#endregion
 	

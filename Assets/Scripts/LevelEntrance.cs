@@ -15,7 +15,10 @@ public class LevelEntrance : MonoBehaviour {
     
     public void EnterLevel() {
         if (completed || !level) return;
-        GameplayManager.instance.EnterLevel(level);
+
+		// Add "enter level" to move history
+		GameplayManager.instance.AddMove(EntityState.EnterLevel(level));
+		GameplayManager.instance.EnterLevel(level);
     }
     
 

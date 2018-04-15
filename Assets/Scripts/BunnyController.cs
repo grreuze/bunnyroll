@@ -59,16 +59,20 @@ public class BunnyController : MovableEntity {
 
 
 	protected override void ApplyState(int state) {
+		StopCurrentMovement();
+
 		this.state = state;
 
 		RaycastHit hit;
         // this does not work if we're eating a carrot downward (or a few other cases)
 		if (Eating && Physics.Raycast(my.position + my.up + my.forward, -my.up, out hit, 1, layerMask)) {
 			MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
-
+			if (!movable) {
+				Debug.LogWarning("Eating not found");
+				return;
+			}
 			currentlyEating = movable;
 			movable.transform.parent = my;
-
 		}
 	}
 
@@ -82,9 +86,9 @@ public class BunnyController : MovableEntity {
 			input.x = Round(Input.GetAxis("Horizontal"));
 			input.z = Round(Input.GetAxis("Vertical"));
             
-            if (input.sqrMagnitude == 1 && Time.time > lastInput + timeBetweenMoves)
-            {
-                DetermineMovement();
+            if (input.sqrMagnitude == 1 && Time.time > lastInput + timeBetweenMoves) {
+				AddMove();
+				DetermineMovement();
 
                 if (Physics.Raycast(my.position + input * 2, -yAxis, 1, layerMask))
                     lastInput = Time.time;
@@ -95,11 +99,15 @@ public class BunnyController : MovableEntity {
                 lastInput = 0;
 		}
 	}
-    #endregion
 
-    #region Movement
+	private void Start() {
+		GameplayManager.player = this;
+	}
+	#endregion
 
-    public override void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
+	#region Movement
+
+	public override void ChangePosition(Vector3 startPos, Vector3 endPos, float duration, Vector3 direction) {
 
         if (carrying && carrying.transform.parent != my)
             carrying.Push(yAxis);
@@ -159,7 +167,6 @@ public class BunnyController : MovableEntity {
 			}
 			currentlyEating.transform.parent = my;
 		}
-
 		ChangeRotation(initialRotation, finalRotation, timeToRotate, direction);
 	}
 	
@@ -395,19 +402,28 @@ public class BunnyController : MovableEntity {
 		if (movable.CanMove(direction))
 			movable.Push(direction);
 		else if (SameDirection(direction, my.forward) && !Eating && movable.CanBeEaten(direction) && !ShouldRiseOnEars()) {
-			Eating = true;
-			currentlyEating = movable;
-			JustAte = true;
-			currentlyEating.Eat(my.position + direction);
+			StartEating(movable, direction);
 		}
 		else return false; // blocked by wall
 		return true;
 	}
 
+	public void StartEating(MovableEntity movable, Vector3 direction) {
+
+		Eating = true;
+		currentlyEating = movable;
+		JustAte = true;
+		currentlyEating.Eat(my.position + direction);
+		GameplayManager.instance.AddMove(EntityState.StartEating(currentlyEating));
+	}
+
     public override void StopEating() {
+		GameplayManager.instance.AddMove(EntityState.StopEating(currentlyEating));
+
         Eating = false;
         currentlyEating.transform.parent = null;
         currentlyEating = null;
+		print("hey stop");
     }
 
 	#endregion

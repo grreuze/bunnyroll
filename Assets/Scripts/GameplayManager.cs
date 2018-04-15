@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections;
 using UnityEngine;
 
 public class GameplayManager : MonoBehaviour {
@@ -21,64 +20,70 @@ public class GameplayManager : MonoBehaviour {
     }
 
     public void Update() {
-        if (Input.GetButtonDown("Cancel"))
-        {
-            foreach(MovableEntity actor in actors)
-                actor.CancelLastMove();
-
-        } else if (Input.GetButtonDown("Restart"))
-        {
-            foreach (MovableEntity actor in actors)
-                actor.ResetMoves();
-        }
+		if (Input.GetButtonDown("Cancel"))
+			CancelLastMove();
+		else if (Input.GetButtonDown("Restart"))
+			ResetMoves();
     }
 
-    #region Move History
+	#region Move History
 
-    public void AddActor(MovableEntity actor)
-    {
-		if (!actors.Contains(actor)) {
-			actors.Add(actor);
+	public List<List<EntityState>> moveHistory = new List<List<EntityState>>();
+	public static int moveIndex;
+	public static int resetPoint;
 
-			if (player) {
-				actors.Remove(player);
-				actors.Add(player); // we want the player last in our list
+	public void AddMove(EntityState newMove) {
+		if (moveHistory.Count <= moveIndex)
+			moveHistory.Add(new List<EntityState>());
 
-			} else {
-				BunnyController bunny = actor.GetComponent<BunnyController>();
-				if (bunny) player = bunny;
-			}
+		if (moveHistory[moveIndex].Contains(newMove)) return; // failsafe
+
+		moveHistory[moveIndex].Add(newMove);
+	}
+	public void AddMoveOnPrevious(EntityState newMove) {
+		moveHistory[moveIndex-1].Add(newMove);
+	}
+
+
+	void ResetTo(int index) {
+
+		int count = moveHistory.Count - index;
+
+		for (int i = 0; i < count; i++)
+			CancelLastMove();
+
+	}
+
+	void CancelLastMove() {
+		int index = moveHistory.Count - 1; // Count is different from moveIndex as moveIndex only changes when the move is over.
+
+		if (index < 0) return;
+
+		foreach (EntityState state in moveHistory[index]) {
+			
+			if (state.IsEnterLevel()) {
+				ExitLevel(false);
+			} else if (state.IsExitLevel()) {
+				EnterLevel(state.reference.GetComponent<Level>());
+			} else if (state.IsStopEating()) {
+				player.currentlyEating = state.reference.GetComponent<MovableEntity>();
+			} else if (state.IsStartEating()) {
+				player.StopEating();
+			} else
+				state.SetAsCurrent();
+
 		}
-    }
 
-    public void RemoveActor(MovableEntity actor)
-    {
-        if (actors.Contains(actor))
-            actors.Remove(actor);
-    }
-
-	public void SetNewResetPoint() {
-        foreach (MovableEntity actor in actors)
-            actor.SetResetPoint(+1);
-    }
-
-	public void WaitForEndOfMove() {
-		StopAllCoroutines();
-
-        //foreach (MovableEntity actor in actors)
-        //    actor.EndMove(Vector3.zero);
-
-        StartCoroutine(_WaitForEndOfMove());
+		moveHistory.RemoveAt(index);
+		moveIndex = index;
 	}
 
-	IEnumerator _WaitForEndOfMove() {
-		while (MovableEntity.globalActions > 0) yield return null;
-
-		foreach (MovableEntity actor in actors)
-			actor.AddMove();
+	void ResetMoves() {
+		ResetTo(resetPoint);
 	}
-
+	
     #endregion
+
 
     #region Level Management
 
@@ -86,34 +91,32 @@ public class GameplayManager : MonoBehaviour {
         if (!levels.Contains(level.gameObject)) {
             levels.Add(level.gameObject);
             level.ID = levels.Count - 1;
-        }
+		}
     }
 
     public void EnterLevel(Level level) {
         if (!inLevel) {
             inLevel = true;
-
+			
             foreach (GameObject lvl in levels)
                 lvl.SetActive(false);
 
             level.gameObject.SetActive(true);
             activeLevel = level.ID;
 
-            SetNewResetPoint();
-
+			resetPoint = moveIndex;
             OnEnterLevel?.Invoke(level.ID);
         }
     }
 
     public void ExitLevel(bool completed) {
         inLevel = false;
-
-        foreach (GameObject lvl in levels)
+		
+		foreach (GameObject lvl in levels)
             lvl.SetActive(true);
-        
-        SetNewResetPoint();
 
-        OnExitLevel?.Invoke(activeLevel, completed);
+		resetPoint = moveIndex;
+		OnExitLevel?.Invoke(activeLevel, completed);
     }
     
     public delegate void EnterLevelEvent(int ID);

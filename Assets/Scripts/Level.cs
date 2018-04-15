@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Level : MonoBehaviour {
+public class Level : RecordableObject {
 
     [HideInInspector] public int ID;
 
@@ -35,7 +35,10 @@ public class Level : MonoBehaviour {
         foreach (Carrot carrot in carrots) {
             if (!carrot.FullyEaten) return false;
         }
-        GameplayManager.instance.ExitLevel(true);
+
+		// Add "exit level" to move history
+		GameplayManager.instance.AddMoveOnPrevious(EntityState.ExitLevel(this));
+		GameplayManager.instance.ExitLevel(true);
         GetComponentInChildren<LevelEntrance>().completed = true;
 
         return true;

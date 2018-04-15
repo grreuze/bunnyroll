@@ -39,6 +39,7 @@ public class Carrot : MovableEntity {
     }
 
 	protected override void ApplyState(int state) {
+		StopCurrentMovement();
 		this.state = state;
 		bool a = EatenA, b = EatenB;
 		my.parent = null;
@@ -95,6 +96,7 @@ public class Carrot : MovableEntity {
 	}
 
 	public override void Push(Vector3 direction) {
+		AddMove();
 		// todo : si je suis à la verticale et qu'on me pousse depuis le haut, je tombe
 		if (!Colinear(direction, my.forward) && !Colinear(my.forward, yAxis)) {
 			Vector3 axis = new Vector3(direction.z, 0, -direction.x);
@@ -116,6 +118,7 @@ public class Carrot : MovableEntity {
 	}
 
 	public override void Eat(Vector3 position) {
+		AddMove();
 		Vector3 myPos = RoundPosition(my.position);
 		position = RoundPosition(position);
 
@@ -134,7 +137,7 @@ public class Carrot : MovableEntity {
 	}
 
 	public override void StopEating() {
-
+		AddMove();
 		if (FullyEaten)
 			return;
 
