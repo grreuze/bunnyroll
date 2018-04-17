@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public struct EntityState {
+public class EntityState : RecordableMove {
 
 	public RecordableObject reference;
 	public bool active;
@@ -9,6 +9,7 @@ public struct EntityState {
 	public int state;
 
 	public EntityState(RecordableObject reference, bool active, Vector3 position, Quaternion rotation, int state) {
+        type = eType.EntityState;
 		this.reference = reference;
 		this.active = active;
 		this.position = position;
