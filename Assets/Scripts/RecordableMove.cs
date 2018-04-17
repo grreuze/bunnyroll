@@ -11,9 +11,4 @@ public class RecordableMove {
     }
 
     public eType type;
-
-    public RecordableMove(eType type) {
-        this.type = type;
-    }
-
 }
