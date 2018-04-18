@@ -37,8 +37,9 @@ public class Level : RecordableObject {
         }
 
 		// Add "exit level" to move history
-		GameplayManager.instance.AddMoveOnPrevious(EntityState.ExitLevel(this));
+		GameplayManager.instance.AddMove(new RecordableMove(this, RecordableMove.eType.ExitLevel));
 		GameplayManager.instance.ExitLevel(true);
+        GameplayManager.instance.SetResetPoint(+2);
         GetComponentInChildren<LevelEntrance>().completed = true;
 
         return true;

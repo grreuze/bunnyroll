@@ -414,16 +414,15 @@ public class BunnyController : MovableEntity {
 		currentlyEating = movable;
 		JustAte = true;
 		currentlyEating.Eat(my.position + direction);
-		GameplayManager.instance.AddMove(EntityState.StartEating(currentlyEating));
+		GameplayManager.instance.AddMove(new RecordableMove(currentlyEating, RecordableMove.eType.StartEating));
 	}
 
     public override void StopEating() {
-		GameplayManager.instance.AddMove(EntityState.StopEating(currentlyEating));
+		GameplayManager.instance.AddMove(new RecordableMove(currentlyEating, RecordableMove.eType.StopEating));
 
         Eating = false;
         currentlyEating.transform.parent = null;
         currentlyEating = null;
-		print("hey stop");
     }
 
 	#endregion

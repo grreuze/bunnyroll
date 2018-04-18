@@ -28,22 +28,22 @@ public class GameplayManager : MonoBehaviour {
 
 	#region Move History
 
-	public List<List<EntityState>> moveHistory = new List<List<EntityState>>();
+	public List<List<RecordableMove>> moveHistory = new List<List<RecordableMove>>();
 	public static int moveIndex;
 	public static int resetPoint;
 
-	public void AddMove(EntityState newMove) {
+	public void AddMove(RecordableMove newMove) {
 		if (moveHistory.Count <= moveIndex)
-			moveHistory.Add(new List<EntityState>());
+			moveHistory.Add(new List<RecordableMove>());
 
 		if (moveHistory[moveIndex].Contains(newMove)) return; // failsafe
 
 		moveHistory[moveIndex].Add(newMove);
 	}
-	public void AddMoveOnPrevious(EntityState newMove) {
-		moveHistory[moveIndex-1].Add(newMove);
-	}
 
+	public void AddMoveWithOffset(RecordableMove newMove, int offset) {
+		moveHistory[moveIndex + offset].Add(newMove);
+	}
 
 	void ResetTo(int index) {
 
@@ -59,19 +59,30 @@ public class GameplayManager : MonoBehaviour {
 
 		if (index < 0) return;
 
-		foreach (EntityState state in moveHistory[index]) {
-			
-			if (state.IsEnterLevel()) {
-				ExitLevel(false);
-			} else if (state.IsExitLevel()) {
-				EnterLevel(state.reference.GetComponent<Level>());
-			} else if (state.IsStopEating()) {
-				player.currentlyEating = state.reference.GetComponent<MovableEntity>();
-			} else if (state.IsStartEating()) {
-				player.StopEating();
-			} else
-				state.SetAsCurrent();
-
+		foreach (RecordableMove state in moveHistory[index]) {
+            switch (state.type) {
+                case RecordableMove.eType.EntityState:
+                    (state as EntityState).SetAsCurrent();
+                    break;
+                case RecordableMove.eType.EnterLevel:
+                    ExitLevel(false);
+                    break;
+                case RecordableMove.eType.ExitLevel:
+                    EnterLevel(state.reference as Level);
+                    break;
+                case RecordableMove.eType.StartEating:
+                    player.StopEating();
+                    break;
+                case RecordableMove.eType.StopEating:
+                    player.currentlyEating = state.reference as MovableEntity;
+                    break;
+                case RecordableMove.eType.ResetPoint:
+                    resetPoint = (state as ResetPoint).index;
+                    break;
+                default:
+                    Debug.LogError("Missing Recordable Move Type");
+                    break;
+            }
 		}
 
 		moveHistory.RemoveAt(index);
@@ -82,6 +93,11 @@ public class GameplayManager : MonoBehaviour {
 		ResetTo(resetPoint);
 	}
 	
+    public void SetResetPoint(int offset = 0) {
+        AddMove(new ResetPoint(player, resetPoint)); // Remember the last resetPoint
+        resetPoint = moveIndex + offset;
+    }
+
     #endregion
 
 
@@ -104,7 +120,6 @@ public class GameplayManager : MonoBehaviour {
             level.gameObject.SetActive(true);
             activeLevel = level.ID;
 
-			resetPoint = moveIndex;
             OnEnterLevel?.Invoke(level.ID);
         }
     }
@@ -114,8 +129,7 @@ public class GameplayManager : MonoBehaviour {
 		
 		foreach (GameObject lvl in levels)
             lvl.SetActive(true);
-
-		resetPoint = moveIndex;
+        
 		OnExitLevel?.Invoke(activeLevel, completed);
     }
     
