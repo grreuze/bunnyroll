@@ -5,6 +5,11 @@ public class Carrot : MovableEntity {
 	[SerializeField] GameObject partA, partB;
     public Level level;
 
+	[Header("Rendering")]
+	public Renderer[] renderers;
+	public Material regularMat, stoneMat;
+
+
 	#region State
 
 	const int EATEN_A = 0, EATEN_B = 1, HALFEATEN = 2, FROZEN = 3;
@@ -35,7 +40,9 @@ public class Carrot : MovableEntity {
 
     public void SetFrozen(bool freeze) {
         Frozen = freeze;
-        // change material here
+
+		foreach (Renderer rend in renderers)
+			rend.sharedMaterial = freeze ? stoneMat : regularMat;
     }
 
 	protected override void ApplyState(int state) {
