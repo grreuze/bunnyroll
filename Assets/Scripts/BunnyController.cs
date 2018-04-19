@@ -7,6 +7,9 @@ public class BunnyController : MovableEntity {
 	public MovableEntity currentlyEating;
     float lastInput;
 
+    [Header("Rendering")]
+    public ParticleSystem eatParticles;
+
 	#region State
 
 	// States
@@ -180,7 +183,8 @@ public class BunnyController : MovableEntity {
 
 		if (Suspended && readyToEat) {
 			JustAte = true;
-			currentlyEating.Eat(finalPosition);
+            eatParticles.Play();
+            currentlyEating.Eat(finalPosition);
 
 		} else {
 			RaycastHit hit;
@@ -214,7 +218,8 @@ public class BunnyController : MovableEntity {
                     }
 					if (readyToEat) {
 						JustAte = true;
-						currentlyEating.Eat(finalPosition);
+                        eatParticles.Play();
+                        currentlyEating.Eat(finalPosition);
 					} else
 						return; // there's a wall blocking us
 				}
@@ -292,7 +297,8 @@ public class BunnyController : MovableEntity {
 
 			if (Eating) {
 				JustAte = true;
-				currentlyEating.Eat(pos - yAxis);
+                eatParticles.Play();
+                currentlyEating.Eat(pos - yAxis);
 			} else if (onGround) {
 				MovableEntity movable = hit.transform.GetComponent<MovableEntity>();
 				if (movable) {
@@ -413,7 +419,8 @@ public class BunnyController : MovableEntity {
 		Eating = true;
 		currentlyEating = movable;
 		JustAte = true;
-		currentlyEating.Eat(my.position + direction);
+        eatParticles.Play();
+        currentlyEating.Eat(my.position + direction);
 		GameplayManager.instance.AddMove(new RecordableMove(currentlyEating, RecordableMove.eType.StartEating));
 	}
 

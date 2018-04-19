@@ -113,8 +113,7 @@ public class GameplayManager : MonoBehaviour {
     public void EnterLevel(Level level) {
         if (!inLevel) {
             inLevel = true;
-            print("Enter");
-			
+
             foreach (GameObject lvl in levels)
                 lvl.SetActive(false);
 
@@ -127,7 +126,6 @@ public class GameplayManager : MonoBehaviour {
 
     public void ExitLevel(bool completed) {
         inLevel = false;
-        print("Exit");
 
         foreach (GameObject lvl in levels)
             lvl.SetActive(true);
