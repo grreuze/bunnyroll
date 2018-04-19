@@ -49,7 +49,7 @@ public class Carrot : MovableEntity {
 		StopCurrentMovement();
 		this.state = state;
 		bool a = EatenA, b = EatenB;
-		my.parent = null;
+		my.parent = level.transform;
 
 		partA.SetActive(!a);
 		partB.SetActive(!b);

@@ -421,7 +421,7 @@ public class BunnyController : MovableEntity {
 		GameplayManager.instance.AddMove(new RecordableMove(currentlyEating, RecordableMove.eType.StopEating));
 
         Eating = false;
-        currentlyEating.transform.parent = null;
+        currentlyEating.transform.parent = (currentlyEating as Carrot).level.transform;
         currentlyEating = null;
     }
 
