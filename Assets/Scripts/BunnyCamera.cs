@@ -6,6 +6,7 @@ public class BunnyCamera : MonoBehaviour {
 	[SerializeField] Vector3 baseOffset = new Vector3(0, 1, -1);
 	[SerializeField] float distance = 8;
 	[SerializeField] float damp = 0.1f;
+    [SerializeField] float minY = 7;
 
 	float deltaTime;
 	Transform my;
@@ -19,6 +20,8 @@ public class BunnyCamera : MonoBehaviour {
 		deltaTime = Time.deltaTime;
 
 		camPosition = target.position + baseOffset * distance;
+        camPosition.y = Mathf.Max(minY, camPosition.y);
+
 		my.position = SmoothApproach(my.position, lastFrameCamPos, camPosition, deltaTime/damp);
 		lastFrameCamPos = camPosition;
 	}
