@@ -3,6 +3,7 @@
 public class Level : RecordableObject {
 
     [HideInInspector] public int ID;
+	public bool hidden;
 
     Carrot[] carrots;
     LevelEntrance entrance;
@@ -11,7 +12,7 @@ public class Level : RecordableObject {
         carrots = GetComponentsInChildren<Carrot>();
         foreach (Carrot carrot in carrots) {
             carrot.level = this;
-            carrot.SetFrozen(true);
+            carrot.SetFrozen(!hidden);
         }
 
         entrance = GetComponentInChildren<LevelEntrance>();
@@ -40,7 +41,8 @@ public class Level : RecordableObject {
 		GameplayManager.instance.AddMove(new RecordableMove(this, RecordableMove.eType.ExitLevel));
 		GameplayManager.instance.ExitLevel(true);
         GameplayManager.instance.SetResetPoint(+2);
-        GetComponentInChildren<LevelEntrance>().completed = true;
+		if (!hidden)
+			GetComponentInChildren<LevelEntrance>().completed = true;
 
         return true;
     }
