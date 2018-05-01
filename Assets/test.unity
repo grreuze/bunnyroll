@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -548,6 +548,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!114 &17431563
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1976,7 +1977,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &52341001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1989,6 +1990,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!114 &52341002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5860,7 +5862,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &178042396
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5980,6 +5982,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &179788537
 GameObject:
   m_ObjectHideFlags: 0
@@ -7646,6 +7649,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &215280471
 GameObject:
   m_ObjectHideFlags: 0
@@ -9748,6 +9752,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &271447822
 GameObject:
   m_ObjectHideFlags: 0
@@ -11873,6 +11878,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1001 &324175858
 Prefab:
   m_ObjectHideFlags: 0
@@ -16438,6 +16444,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &461388502
 GameObject:
   m_ObjectHideFlags: 0
@@ -16958,6 +16965,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &473723033
 GameObject:
   m_ObjectHideFlags: 0
@@ -21057,6 +21065,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &610219562
 GameObject:
   m_ObjectHideFlags: 0
@@ -23094,6 +23103,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &664540936
 GameObject:
   m_ObjectHideFlags: 0
@@ -24025,6 +24035,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &682572127
 GameObject:
   m_ObjectHideFlags: 0
@@ -24383,6 +24394,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!114 &686795290
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33995,6 +34007,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!114 &957999967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36591,6 +36604,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1024769828
 GameObject:
   m_ObjectHideFlags: 0
@@ -40936,6 +40950,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1147139868
 GameObject:
   m_ObjectHideFlags: 0
@@ -41135,6 +41150,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1151543888
 GameObject:
   m_ObjectHideFlags: 0
@@ -48071,6 +48087,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!114 &1350613145
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50961,6 +50978,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!4 &1407303502 stripped
 Transform:
   m_PrefabParentObject: {fileID: 4702442490387308, guid: 1777900100e4c394e962ddf16966b98f,
@@ -54083,7 +54101,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4702442490387308, guid: 1777900100e4c394e962ddf16966b98f, type: 2}
       propertyPath: m_LocalPosition.y
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4702442490387308, guid: 1777900100e4c394e962ddf16966b98f, type: 2}
       propertyPath: m_LocalPosition.z
@@ -56413,6 +56431,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1590169781
 GameObject:
   m_ObjectHideFlags: 0
@@ -60562,6 +60581,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1709429170
 GameObject:
   m_ObjectHideFlags: 0
@@ -61295,6 +61315,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1738065776
 GameObject:
   m_ObjectHideFlags: 0
@@ -61808,6 +61829,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1756539705
 GameObject:
   m_ObjectHideFlags: 0
@@ -66653,6 +66675,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1912852242
 GameObject:
   m_ObjectHideFlags: 0
@@ -69831,6 +69854,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &1991190441
 GameObject:
   m_ObjectHideFlags: 0
@@ -73427,6 +73451,7 @@ MonoBehaviour:
   baseOffset: {x: 0, y: 1, z: -0.3}
   distance: 6
   damp: 0.1
+  minY: 7
 --- !u!1 &2096236865
 GameObject:
   m_ObjectHideFlags: 0
@@ -74063,6 +74088,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &2109937182
 GameObject:
   m_ObjectHideFlags: 0
@@ -74278,6 +74304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!1 &2113513430
 GameObject:
   m_ObjectHideFlags: 0
@@ -74390,6 +74417,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 0
+  hidden: 0
 --- !u!114 &2115583736
 MonoBehaviour:
   m_ObjectHideFlags: 0

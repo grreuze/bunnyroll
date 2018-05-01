@@ -384,6 +384,18 @@ public class BunnyController : MovableEntity {
 		return true;
 	}
 
+	//	Try moving (position + direction, raycast)
+	//		if there's nothing
+	//			move
+	//		else if it's movable
+	//			push it
+	//			move
+	//		else
+	//			dont
+				
+
+
+
 	void HandleFalling(Vector3 pos) {
 		if (OnTheSides() && Physics.Raycast(pos + my.up, -yAxis, 1, layerMask)) {
 
