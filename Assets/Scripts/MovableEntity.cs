@@ -105,8 +105,6 @@ public class MovableEntity : RecordableObject {
 
 	#region Move History
 
-	int resetIndex = 0, currentIndex = -1;
-
 	EntityState GetCurrentState() {
 		return new EntityState(this, gameObject.activeSelf, my.position, my.rotation, state);
 	}

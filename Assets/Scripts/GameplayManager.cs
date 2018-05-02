@@ -10,7 +10,6 @@ public class GameplayManager : MonoBehaviour {
     public static int activeLevel;
     
     List<GameObject> levels = new List<GameObject>();
-    List<MovableEntity> actors = new List<MovableEntity>();
 
     public void OnEnable() {
         if (!instance)
@@ -111,7 +110,7 @@ public class GameplayManager : MonoBehaviour {
     }
 
     public void EnterLevel(Level level) {
-        if (!inLevel) {
+        if (!inLevel && !level.hidden) {
             inLevel = true;
 
             foreach (GameObject lvl in levels)

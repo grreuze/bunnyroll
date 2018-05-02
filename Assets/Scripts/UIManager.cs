@@ -8,10 +8,7 @@ public class UIManager : MonoBehaviour {
     private void Start() {
 
         gameOverPanel.gameObject.SetActive(false);
-
-
-
+        
     }
-
 
 }
